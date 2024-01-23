@@ -10,6 +10,9 @@ class Posting:
     def getTF(self):
         return self.__tf
     
+    def getDocID(self):
+        return self.__docID
+    
 class PositionalPosting(Posting):
     def __init__(self, docID, tf, positions):
         super().__init__(docID, tf)
@@ -34,6 +37,16 @@ class PostingsList:
         
         self.__tf_whole = frequency
         return frequency
+    
+    def getDF(self):
+        return self.__df
+    
+    def getDocIdTFPairs(self):
+        ls = []
+        for p in self.__list:
+            ls.append((p.getDocID(), p.getTF()))
+        
+        return ls
 
 class InvertedIndexType(Enum):
     BASIC = 0
@@ -43,6 +56,7 @@ class InvertedIndexType(Enum):
 class InvertedIndex:
     def __init__(self, type : InvertedIndexType.POSITIONAL):
         self.__dictionary = {}
+        self.__docCount = 0
 
         if type in [InvertedIndexType.POSITIONAL, InvertedIndexType.BASIC]:
             self.__type = type
@@ -75,6 +89,12 @@ class InvertedIndex:
     def __deleteTerm(self, term):
         self.__dictionary.pop(term)
 
+    def getPostingList(self, term: str) -> PostingsList:
+        if term not in self.__dictionary:
+            return None
+        
+        return self.__dictionary[term]
+
     def save(self, obj, path, mode):
         with open(path, mode) as file:
             pickle.dump(obj, file)
@@ -87,6 +107,9 @@ class InvertedIndex:
         
         return obj
 
+    def incrementDocCount(self, num):
+        self.__docCount += num
 
-
+    def getDocCount(self):
+        return self.__docCount
 

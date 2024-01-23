@@ -1,6 +1,3 @@
-import hazm
+dc = {0: 25}
 
-lem = hazm.Lemmatizer()
-print(lem.lemmatize('رفته', 'V'))
-stem = hazm.Stemmer()
-print(stem.stem('زلزله‌زدگان'))
+print(dc[1])
