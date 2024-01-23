@@ -95,13 +95,13 @@ class InvertedIndex:
         
         return self.__dictionary[term]
 
-    def save(self, obj, path, mode):
+    def save(obj, path, mode):
         with open(path, mode) as file:
             pickle.dump(obj, file)
         print(f"{obj} saved.")
 
     
-    def load(self, path, mode):
+    def load(path, mode):
         with open(path, mode) as file:
             obj = pickle.load(file)
         

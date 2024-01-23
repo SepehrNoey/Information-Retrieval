@@ -8,6 +8,7 @@ class QueryProcessor:
         self.__ii = ii
 
     def findKRelevant(self, query: str, k: int):
+        query = query.strip()
         tokens = preprocess(query)
         for i in range(len(tokens)):
             pl = self.__ii.getPostingList(tokens[i])
@@ -29,13 +30,16 @@ class QueryProcessor:
             scores = self.getTfIdfList(t)
             for id in scores:
                 if id not in doc_term_scores:
-                    doc_term_scores[id] = {t: 0.0}
-                doc_term_scores[id][t] += scores[id]
+                    doc_term_scores[id] = {}
+                doc_term_scores[id][t] = scores[id]
 
         top_k_heap = []
         for docID, doc_vector in doc_term_scores.items():
             doc_score = self.getSimilarity(query_term_scores, doc_vector)
             heapq.heappush(top_k_heap, (-doc_score, docID))
+        
+        if len(top_k_heap) < k:
+            k = len(top_k_heap)
         
         result = []
         for _ in range(k):

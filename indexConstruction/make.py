@@ -36,5 +36,5 @@ for i in range(len(data)):
         print("done processing doc: ", i + 1)
 
 deleted = ii.deleteMostRepeated(50)
-ii.save(deleted, "deleted-terms.pkl", "wb")
-ii.save(ii, "ii.pkl", "wb")
+InvertedIndex.save(deleted, "deleted-terms.pkl", "wb")
+InvertedIndex.save(ii, "ii.pkl", "wb")

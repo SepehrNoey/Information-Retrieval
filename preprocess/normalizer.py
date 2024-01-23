@@ -82,8 +82,9 @@ def concat_special_subwords(str: str):
             space_type = no_width_space
         elif words[i] in special_subwords_after:
             space_type = no_width_space
-        else:
+        elif i >= 1: # skipping adding space before first word
             space_type = single_space
+
         
         norm_str.append(space_type)        
         norm_str.append(words[i])
