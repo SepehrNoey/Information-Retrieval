@@ -19,6 +19,7 @@ class PostingsList:
     def __init__(self):
         self.__df = 0
         self.__list = []
+        self.__tf_whole = 0
 
     def addPosting(self, p: Posting):
         self.__list.append(p)
@@ -31,6 +32,7 @@ class PostingsList:
         for posting in self.__list:
             frequency += posting.getTF()
         
+        self.__tf_whole = frequency
         return frequency
 
 class InvertedIndexType(Enum):
