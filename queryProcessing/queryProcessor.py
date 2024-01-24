@@ -10,11 +10,16 @@ class QueryProcessor:
     def findKRelevant(self, query: str, k: int):
         query = query.strip()
         tokens = preprocess(query)
+        to_be_deleted = []
         for i in range(len(tokens)):
             pl = self._ii.getPostingList(tokens[i])
             if pl is None:
-                tokens.remove(tokens[i])
-
+                to_be_deleted.append(i)
+        
+        to_be_deleted.sort(reverse=True)
+        for i in to_be_deleted:
+            tokens.pop(i)
+        
         query_term_scores = {}
         query_term_freq = {}
         for t in tokens:
@@ -85,10 +90,15 @@ class PositionalQueryProcessor(QueryProcessor):
     def findKRelevant(self, query: str, k: int):
         query = query.strip()
         tokens = preprocess(query)
+        to_be_deleted = []
         for i in range(len(tokens)):
             pl = self._ii.getPostingList(tokens[i])
             if pl is None:
-                tokens.remove(tokens[i])
+                to_be_deleted.append(i)
+        
+        to_be_deleted.sort(reverse=True)
+        for i in to_be_deleted:
+            tokens.pop(i)
 
         found_docs = []
 
