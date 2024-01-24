@@ -13,7 +13,8 @@ file_path = "C:/Users/Lenovo/Downloads/Telegram Desktop/IR_data_news_12k.json"
 with open(file_path, 'r') as file:
     data = json.load(file)
 
-ii = InvertedIndex(InvertedIndexType.POSITIONAL)
+ii = InvertedIndex(InvertedIndexType.POSITIONAL, len(data))
+champII = InvertedIndex(InvertedIndexType.POSITIONAL, len(data))
 
 for i in range(len(data)):
     content = data[str(i)]['content']
@@ -29,12 +30,17 @@ for i in range(len(data)):
     
     for key in doc_terms:
         ii.addPosting(key, i + 1, doc_terms[key][0], doc_terms[key][1])
+        # if tf >= 3, so it's a good doc to be in champion list
+        if doc_terms[key][0] >= 3:
+            champII.addPosting(key, i + 1, doc_terms[key][0], doc_terms[key][1])
     
-    ii.incrementDocCount(1)
 
     if (i + 1) % 500 == 0:
         print("done processing doc: ", i + 1)
 
-deleted = ii.deleteMostRepeated(50)
-InvertedIndex.save(deleted, "deleted-terms.pkl", "wb")
+ii_deleted = ii.deleteMostRepeated(50)
+champII_deleted = champII.deleteMostRepeated(50)
+InvertedIndex.save(ii_deleted, "ii-deleted-terms.pkl", "wb")
 InvertedIndex.save(ii, "ii.pkl", "wb")
+InvertedIndex.save(champII_deleted, "champII-deleted-terms.pkl", "wb")
+InvertedIndex.save(champII, "champII.pkl", "wb")

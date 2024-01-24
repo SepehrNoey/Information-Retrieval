@@ -7,12 +7,15 @@ class QueryProcessor:
     def __init__(self, ii: InvertedIndex):
         self._ii = ii
 
-    def findKRelevant(self, query: str, k: int):
+    def search(self, query: str, k: int):
+        return self._findKRelevant(self._ii, query, k)
+
+    def _findKRelevant(self, ii: InvertedIndex, query: str, k: int):
         query = query.strip()
         tokens = preprocess(query)
         to_be_deleted = []
         for i in range(len(tokens)):
-            pl = self._ii.getPostingList(tokens[i])
+            pl = ii.getPostingList(tokens[i])
             if pl is None:
                 to_be_deleted.append(i)
         
@@ -87,12 +90,15 @@ class PositionalQueryProcessor(QueryProcessor):
     def __init__(self, ii: InvertedIndex):
         super().__init__(ii)
 
-    def findKRelevant(self, query: str, k: int):
+    def search(self, query: str, k: int):
+        return self._findKRelevant(self._ii, query, k)
+
+    def _findKRelevant(self, ii: InvertedIndex, query: str, k: int):
         query = query.strip()
         tokens = preprocess(query)
         to_be_deleted = []
         for i in range(len(tokens)):
-            pl = self._ii.getPostingList(tokens[i])
+            pl = ii.getPostingList(tokens[i])
             if pl is None:
                 to_be_deleted.append(i)
         
@@ -169,7 +175,7 @@ class PositionalQueryProcessor(QueryProcessor):
         
         if len(found_docs) < k:
             qp = QueryProcessor(self._ii)
-            res = qp.findKRelevant(query, 4 * k)
+            res = qp._findKRelevant(query, 4 * k)
             for i in range(len(res)):
                 if res[i][0] not in found_docs:
                     found_docs.append(res[i])
@@ -177,3 +183,18 @@ class PositionalQueryProcessor(QueryProcessor):
                     break
                 
         return found_docs
+    
+class EfficientQueryProcessor(QueryProcessor):
+    def __init__(self, ii: InvertedIndex, championII: InvertedIndex):
+        super().__init__(ii)
+        self.__championII = championII
+
+    def search(self, query: str, k: int):
+        cham_res = super()._findKRelevant(self.__championII, query, k)
+        if len(cham_res) < k:
+            normal_res = super()._findKRelevant(self._ii, query, 2 * k)
+            for i in range(len(normal_res)):
+                if normal_res[i] not in cham_res:
+                    cham_res.append(normal_res[i])
+
+        return cham_res

@@ -61,9 +61,9 @@ class InvertedIndexType(Enum):
     
 
 class InvertedIndex:
-    def __init__(self, type : InvertedIndexType.POSITIONAL):
+    def __init__(self, type : InvertedIndexType.POSITIONAL, docCount):
         self.__dictionary = {}
-        self.__docCount = 0
+        self.__docCount = docCount
 
         if type in [InvertedIndexType.POSITIONAL, InvertedIndexType.BASIC]:
             self.__type = type
@@ -113,9 +113,6 @@ class InvertedIndex:
             obj = pickle.load(file)
         
         return obj
-
-    def incrementDocCount(self, num):
-        self.__docCount += num
 
     def getDocCount(self):
         return self.__docCount
