@@ -181,7 +181,10 @@ class PositionalQueryProcessor(QueryProcessor):
                     found_docs.append(res[i])
                 if len(found_docs) == k:
                     break
-                
+        elif len(found_docs) > k:
+            for i in range(len(found_docs) - k):
+                found_docs.pop()
+           
         return found_docs
     
 class EfficientQueryProcessor(QueryProcessor):
