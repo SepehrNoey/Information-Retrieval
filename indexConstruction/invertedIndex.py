@@ -18,6 +18,9 @@ class PositionalPosting(Posting):
         super().__init__(docID, tf)
         self.__positions = positions
 
+    def getPositions(self):
+        return self.__positions
+
 class PostingsList:
     def __init__(self):
         self.__df = 0
@@ -47,6 +50,10 @@ class PostingsList:
             ls.append((p.getDocID(), p.getTF()))
         
         return ls
+    
+    def getPostings(self):
+        return self.__list
+
 
 class InvertedIndexType(Enum):
     BASIC = 0

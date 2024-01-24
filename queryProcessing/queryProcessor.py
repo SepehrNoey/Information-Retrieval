@@ -5,13 +5,13 @@ import heapq
 
 class QueryProcessor:
     def __init__(self, ii: InvertedIndex):
-        self.__ii = ii
+        self._ii = ii
 
     def findKRelevant(self, query: str, k: int):
         query = query.strip()
         tokens = preprocess(query)
         for i in range(len(tokens)):
-            pl = self.__ii.getPostingList(tokens[i])
+            pl = self._ii.getPostingList(tokens[i])
             if pl is None:
                 tokens.remove(tokens[i])
 
@@ -50,12 +50,12 @@ class QueryProcessor:
         
 
     def getTfIdfList(self, token: str):
-        pl = self.__ii.getPostingList(token)
+        pl = self._ii.getPostingList(token)
         id_tf_pairs = pl.getDocIdTFPairs()
         df = pl.getDF()
         doc_scores = {}
         for (id, tf) in id_tf_pairs:
-            doc_scores[id] = (1 + log10(tf)) * log10(self.__ii.getDocCount() / df)
+            doc_scores[id] = (1 + log10(tf)) * log10(self._ii.getDocCount() / df)
         return doc_scores
 
     def getSimilarity(self, a_vector: dict, b_vector: dict):
@@ -70,10 +70,100 @@ class QueryProcessor:
         squared_sum_a = sqrt(squared_sum_a)
         squared_sum_b = sqrt(squared_sum_b)
 
-        processed_terms = {}
         score = 0.0
         for t in a_vector:
             if t in b_vector:
                 score += (a_vector[t] / squared_sum_a) * (b_vector[t] / squared_sum_b)
         
         return score
+    
+
+class PositionalQueryProcessor(QueryProcessor):
+    def __init__(self, ii: InvertedIndex):
+        super().__init__(ii)
+
+    def findKRelevant(self, query: str, k: int):
+        query = query.strip()
+        tokens = preprocess(query)
+        for i in range(len(tokens)):
+            pl = self._ii.getPostingList(tokens[i])
+            if pl is None:
+                tokens.remove(tokens[i])
+
+        found_docs = []
+
+        for i in range(len(tokens), 1, -1): # phrase queries of length i
+            subphrase_start = 0
+            for j in range(len(tokens) - i + 1): # subphrase numbers
+                postings_postingPtr_posPtr = {}
+                for l in range(i):
+                    ls = []
+                    ls.append(self._ii.getPostingList(tokens[subphrase_start + l]).getPostings()) # postings of this token
+                    ls.append(0) # index of last processed doc
+                    ls.append(0) # index of last processed position in that doc
+                    
+                    postings_postingPtr_posPtr[subphrase_start + l] = ls
+
+                first_token_things = postings_postingPtr_posPtr[subphrase_start]
+                for p in range(len(first_token_things[0])): # at most we need to search len(first token postings list) 
+                    curr_posting = first_token_things[0][p]
+                    curr_posIndex = first_token_things[2]
+                    doc_condition = True
+                    
+                    for l in range(1, len(postings_postingPtr_posPtr), 1):
+                        if not doc_condition:
+                            break
+
+                        otherToken_postings = postings_postingPtr_posPtr[subphrase_start + l][0]
+                        otherToken_docIndex = postings_postingPtr_posPtr[subphrase_start + l][1]
+                        otherToken_posIndex = postings_postingPtr_posPtr[subphrase_start + l][2]
+                        
+                        otherDoc_condition = True
+
+                        for m in range(otherToken_docIndex, len(otherToken_postings), 1):
+                            if not otherDoc_condition:
+                                break
+
+                            if curr_posting.getDocID() < otherToken_postings[m].getDocID():
+                                doc_condition = False
+                                break
+                            elif curr_posting.getDocID() > otherToken_postings[m].getDocID():
+                                # postings_postingPtr_posPtr[subphrase_start + l][1] += 1
+                                continue
+                            else: # docID is same, search for successive postions
+                                pos_condition = True
+
+                                for n in range(curr_posIndex, len(curr_posting.getPositions()), 1):
+                                    if not pos_condition:
+                                        break
+                                    
+                                    curr_positions = curr_posting.getPositions()
+                                    otherToken_positions = otherToken_postings[m].getPositions()
+
+                                    for q in range(otherToken_posIndex, len(otherToken_positions), 1):
+                                        if otherToken_positions[q] - curr_positions[n] == l:
+                                            # found successive positions
+                                            
+                                            if l == len(postings_postingPtr_posPtr) - 1: # if we are processing the last token in subphrase
+                                                if otherToken_postings[m].getDocID() not in found_docs:
+                                                    found_docs.append(otherToken_postings[m].getDocID())
+                                            otherDoc_condition = False
+                                            pos_condition = False
+                                            break
+                                        elif otherToken_positions[q] - curr_positions[n] > l:
+                                            break
+                                        else:
+                                            continue
+
+                subphrase_start += 1
+        
+        if len(found_docs) < k:
+            qp = QueryProcessor(self._ii)
+            res = qp.findKRelevant(query, 4 * k)
+            for i in range(len(res)):
+                if res[i][0] not in found_docs:
+                    found_docs.append(res[i])
+                if len(found_docs) == k:
+                    break
+                
+        return found_docs
