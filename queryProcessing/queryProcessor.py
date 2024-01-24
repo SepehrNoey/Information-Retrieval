@@ -114,7 +114,7 @@ class PositionalQueryProcessor(QueryProcessor):
                 postings_postingPtr_posPtr = {}
                 for l in range(i):
                     ls = []
-                    ls.append(self._ii.getPostingList(tokens[subphrase_start + l]).getPostings()) # postings of this token
+                    ls.append(ii.getPostingList(tokens[subphrase_start + l]).getPostings()) # postings of this token
                     ls.append(0) # index of last processed doc
                     ls.append(0) # index of last processed position in that doc
                     
@@ -175,7 +175,7 @@ class PositionalQueryProcessor(QueryProcessor):
         
         if len(found_docs) < k:
             qp = QueryProcessor(self._ii)
-            res = qp._findKRelevant(query, 4 * k)
+            res = qp._findKRelevant(ii, query, 4 * k)
             for i in range(len(res)):
                 if res[i][0] not in found_docs:
                     found_docs.append(res[i])
