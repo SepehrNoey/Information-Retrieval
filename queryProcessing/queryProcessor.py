@@ -35,7 +35,7 @@ class QueryProcessor:
 
         doc_term_scores = {}
         for t in tokens:
-            scores = self.getTfIdfList(t)
+            scores = self.getTfIdfList(ii, t)
             for id in scores:
                 if id not in doc_term_scores:
                     doc_term_scores[id] = {}
@@ -57,8 +57,8 @@ class QueryProcessor:
         return result
         
 
-    def getTfIdfList(self, token: str):
-        pl = self._ii.getPostingList(token)
+    def getTfIdfList(self, ii: InvertedIndex, token: str):
+        pl = ii.getPostingList(token)
         id_tf_pairs = pl.getDocIdTFPairs()
         df = pl.getDF()
         doc_scores = {}
@@ -194,6 +194,7 @@ class EfficientQueryProcessor(QueryProcessor):
 
     def search(self, query: str, k: int):
         cham_res = super()._findKRelevant(self.__championII, query, k)
+        print("chapRes:", cham_res)
         if len(cham_res) < k:
             normal_res = super()._findKRelevant(self._ii, query, 2 * k)
             for i in range(len(normal_res)):
